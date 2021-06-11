@@ -5,7 +5,7 @@
 ![Tests](https://github.com/pooltogether/multi-token-faucet/actions/workflows/main.yml/badge.svg)
 
 # About
-MultiTokenFaucet is a contract which holds multiple TokenFaucets. This allows the allocation/rewarding of multiple tokens vs. a measure token, such as the PoolTogether Ticket. The `beforeTokenMint` and `beforeTokenTransfer` token hooks are called for each associated TokenFaucet. 
+MultiTokenFaucet is a contract which holds multiple [TokenFaucets](https://github.com/pooltogether/pooltogether-pool-contracts/blob/master/contracts/token-faucet/TokenFaucet.sol). This contract allows the allocation/rewarding of multiple tokens vs. a measure token, such as the PoolTogether Ticket. The `beforeTokenMint` and `beforeTokenTransfer` token hooks are called for each associated TokenFaucet. 
 
 # Installation
 Install the repo and dependencies by running:
