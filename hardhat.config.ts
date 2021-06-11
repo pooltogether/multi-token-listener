@@ -5,6 +5,7 @@ import 'hardhat-deploy';
 import 'hardhat-deploy-ethers';
 import 'hardhat-gas-reporter';
 import 'solidity-coverage';
+import 'hardhat-dependency-compiler'
 
 import { HardhatUserConfig } from 'hardhat/config';
 
@@ -38,15 +39,56 @@ const config: HardhatUserConfig = {
   },
   networks,
   solidity: {
-    version: '0.6.12',
-    settings: {
-      optimizer: {
-        enabled: optimizerEnabled,
-        runs: 200,
+    compilers: [
+      {
+        version: '0.6.4',
+        settings: {
+          optimizer: {
+            enabled: optimizerEnabled,
+            runs: 200,
+          },
+          evmVersion: 'istanbul',
+        }
       },
-      evmVersion: 'istanbul',
-    },
-  }
+        {
+          version: '0.6.12',
+          settings: {
+            optimizer: {
+              enabled: optimizerEnabled,
+              runs: 200,
+            },
+            evmVersion: 'istanbul',
+          }
+        },
+        {
+          version: '0.7.6',
+          settings: {
+            optimizer: {
+              enabled: optimizerEnabled,
+              runs: 200,
+            },
+            evmVersion: 'istanbul',
+          }
+        },
+        {
+          version: '0.8.0',
+          settings: {
+            optimizer: {
+              enabled: optimizerEnabled,
+              runs: 200,
+            },
+            evmVersion: 'istanbul',
+          }
+        }
+    ]
+
+
+  },
+  // dependencyCompiler: {
+  //   paths: [
+  //     '@pooltogether/pooltogether-generic-registry/contracts/AddressRegistry.sol',
+  //   ],
+  // }
 };
 
 
