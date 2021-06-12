@@ -5,7 +5,7 @@ import 'hardhat-deploy';
 import 'hardhat-deploy-ethers';
 import 'hardhat-gas-reporter';
 import 'solidity-coverage';
-import 'hardhat-dependency-compiler'
+// import 'hardhat-dependency-compiler'
 
 import { HardhatUserConfig } from 'hardhat/config';
 
@@ -83,12 +83,7 @@ const config: HardhatUserConfig = {
     ]
 
 
-  },
-  // dependencyCompiler: {
-  //   paths: [
-  //     '@pooltogether/pooltogether-generic-registry/contracts/AddressRegistry.sol',
-  //   ],
-  // }
+  }
 };
 
 
