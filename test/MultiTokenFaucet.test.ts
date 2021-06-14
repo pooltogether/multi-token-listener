@@ -16,7 +16,8 @@ describe('MultiToken Faucet', () => {
         [wallet, wallet2, wallet3, wallet4] = await ethers.getSigners()
 
         const multiTokenFaucetContractFactory: ContractFactory = await ethers.getContractFactory("MultiTokenFaucet", wallet)
-        multiTokenFaucet = await multiTokenFaucetContractFactory.deploy(wallet.address)
+        multiTokenFaucet = await multiTokenFaucetContractFactory.deploy()
+        await multiTokenFaucet.initialize(wallet.address)
 
         const erc20ContractFactory: ContractFactory = await ethers.getContractFactory("ERC20Mintable")
 
