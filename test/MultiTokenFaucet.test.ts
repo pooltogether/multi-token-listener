@@ -44,34 +44,34 @@ describe('MultiToken Faucet', () => {
 
     })
 
-    describe('addTokenFaucets()', () => {
+    describe('addAddresses()', () => {
         
         it('Owner can add TokenFaucets', async () => {
-            await expect(multiTokenFaucet.addTokenFaucets([tokenFaucet1.address, tokenFaucet2.address])).to.emit(multiTokenFaucet, "AddressAdded")
+            await expect(multiTokenFaucet.addAddresses([tokenFaucet1.address, tokenFaucet2.address])).to.emit(multiTokenFaucet, "AddressAdded")
         })
     
         it('Non-owner cannot add TokenFaucets', async () => {
-            await expect(multiTokenFaucet.connect(wallet2).addTokenFaucets([tokenFaucet1.address, tokenFaucet2.address])).to.be.reverted
+            await expect(multiTokenFaucet.connect(wallet2).addAddresses([tokenFaucet1.address, tokenFaucet2.address])).to.be.reverted
         })
     })
 
-    describe('removeTokenFaucets()', () => {
+    describe('removeAddress()', () => {
         
         it('Owner can remove TokenFaucets', async () => {
-            await multiTokenFaucet.addTokenFaucets([tokenFaucet1.address, tokenFaucet2.address])
-            await expect(multiTokenFaucet.removeTokenFaucet(tokenFaucet2.address, tokenFaucet1.address)).to.emit(multiTokenFaucet, "AddressRemoved")
+            await multiTokenFaucet.addAddresses([tokenFaucet1.address, tokenFaucet2.address])
+            await expect(multiTokenFaucet.removeAddress(tokenFaucet2.address, tokenFaucet1.address)).to.emit(multiTokenFaucet, "AddressRemoved")
                 .withArgs(tokenFaucet1.address)
         })
     
         it('Non-owner cannot add TokenFaucets', async () => {
-            await expect(multiTokenFaucet.connect(wallet2).removeTokenFaucet(tokenFaucet1.address)).to.be.reverted
+            await expect(multiTokenFaucet.connect(wallet2).removeAddress(tokenFaucet1.address)).to.be.reverted
         })
     })
 
     describe('beforeTokenMint()', () => {
         
         it('should not drip when no time has passed', async () => {
-            await multiTokenFaucet.addTokenFaucets([tokenFaucet1.address, tokenFaucet2.address])
+            await multiTokenFaucet.addAddresses([tokenFaucet1.address, tokenFaucet2.address])
             await ticket1.mint(wallet.address, toWei('100'))
             await testErc20Asset1.mint(tokenFaucet1.address, toWei('100'))
             await testErc20Asset2.mint(tokenFaucet2.address, toWei('100'))
@@ -83,7 +83,7 @@ describe('MultiToken Faucet', () => {
         })
         
         it('should drip tokens on subsequent calls', async () => {
-            await multiTokenFaucet.addTokenFaucets([tokenFaucet1.address, tokenFaucet2.address])
+            await multiTokenFaucet.addAddresses([tokenFaucet1.address, tokenFaucet2.address])
             await ticket1.mint(wallet.address, toWei('100'))
             
             await testErc20Asset1.mint(tokenFaucet1.address, toWei('100'))
@@ -110,7 +110,7 @@ describe('MultiToken Faucet', () => {
     
         it('should not drip when unknown tokens are passed', async () => {
     
-            await multiTokenFaucet.addTokenFaucets([tokenFaucet1.address, tokenFaucet2.address])
+            await multiTokenFaucet.addAddresses([tokenFaucet1.address, tokenFaucet2.address])
             await ticket1.mint(wallet.address, toWei('100'))
             
             await testErc20Asset1.mint(tokenFaucet1.address, toWei('100'))
@@ -128,7 +128,7 @@ describe('MultiToken Faucet', () => {
 
     describe('beforeTokenTransfer()', () => {
         it('should do nothing if minting', async () => {
-            await multiTokenFaucet.addTokenFaucets([tokenFaucet1.address, tokenFaucet2.address])
+            await multiTokenFaucet.addAddresses([tokenFaucet1.address, tokenFaucet2.address])
             await ticket1.mint(wallet.address, toWei('100'))
             
             await testErc20Asset1.mint(tokenFaucet1.address, toWei('100'))
@@ -143,7 +143,7 @@ describe('MultiToken Faucet', () => {
         })
     
         it('should do nothing if transfer for unrelated token', async () => {
-            await multiTokenFaucet.addTokenFaucets([tokenFaucet1.address, tokenFaucet2.address])
+            await multiTokenFaucet.addAddresses([tokenFaucet1.address, tokenFaucet2.address])
             await ticket1.mint(wallet.address, toWei('100'))
             
             await testErc20Asset1.mint(tokenFaucet1.address, toWei('100'))
@@ -158,7 +158,7 @@ describe('MultiToken Faucet', () => {
         })
     
         it('should update the balance drips', async () => {
-            await multiTokenFaucet.addTokenFaucets([tokenFaucet1.address, tokenFaucet2.address])
+            await multiTokenFaucet.addAddresses([tokenFaucet1.address, tokenFaucet2.address])
             
             await ticket1.mint(wallet.address, toWei('80'))
             await ticket1.mint(wallet2.address, toWei('20'))
