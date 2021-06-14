@@ -8,7 +8,7 @@
 MultiTokenFaucet is a contract which holds multiple [TokenFaucets](https://github.com/pooltogether/pooltogether-pool-contracts/blob/master/contracts/token-faucet/TokenFaucet.sol). This contract allows the allocation/rewarding of multiple tokens vs. a measure token, such as the PoolTogether Ticket. The `beforeTokenMint` and `beforeTokenTransfer` token hooks are called for each associated TokenFaucet. 
 
 ## Usage
-1. TokenFaucets should be deployed and initialized individually. The owner of these TokenFaucets be different to that of the MultiTokenFaucet.
+1. TokenFaucets should be deployed and initialized individually. The owner of these TokenFaucets can be different to that of the MultiTokenFaucet.
 1. This contract should be deployed.
 1. The TokenFaucets should be added using `addTokenFaucets()`.
 1. The appropriate `tokenListener` address should be set on the origin contract (PrizeStrategy)
