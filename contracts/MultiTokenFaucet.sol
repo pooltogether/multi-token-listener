@@ -3,13 +3,11 @@
 pragma solidity >=0.6.4 <=8.0.0;
 
 import "@openzeppelin/contracts/access/Ownable.sol";
-
 import "@pooltogether/pooltogether-contracts/contracts/token/TokenListener.sol";
 import "@pooltogether/pooltogether-contracts/contracts/token-faucet/TokenFaucet.sol";
 
 import "./external/AddressRegistry.sol";
 
-import "hardhat/console.sol";
 /// @title MultiTokenFaucet is an ownable contract which holds a number of TokenFaucets
 /// @notice MultiTokenFaucet passes through the ControlledToken beforeTokenMint and beforeTokenTransfer hooks to each TokenFaucet in its registry
 contract MultiTokenFaucet is Ownable, TokenListener, AddressRegistry {
