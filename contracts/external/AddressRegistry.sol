@@ -36,7 +36,7 @@ contract AddressRegistry is Ownable {
 
     /// @notice Returns an array of all contract addresses in the linked list
     /// @return Array of contract addresses
-    function getAddresses() view external returns(address[] memory) {
+    function getAddresses() view public returns(address[] memory) {
         return addressList.addressArray();
     } 
 
