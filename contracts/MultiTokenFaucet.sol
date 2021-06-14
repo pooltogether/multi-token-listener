@@ -9,7 +9,7 @@ import "@pooltogether/pooltogether-contracts/contracts/token-faucet/TokenFaucet.
 
 import "./external/AddressRegistry.sol";
 
-
+import "hardhat/console.sol";
 /// @title MultiTokenFaucet is an ownable contract which holds a number of TokenFaucets
 /// @notice MultiTokenFaucet passes through the ControlledToken beforeTokenMint and beforeTokenTransfer hooks to each TokenFaucet in its registry
 contract MultiTokenFaucet is Ownable, TokenListener, AddressRegistry {
@@ -25,11 +25,12 @@ contract MultiTokenFaucet is Ownable, TokenListener, AddressRegistry {
     /// @param controlledToken The controlledToken address being minted
     /// @param referrer The referrer address
     function beforeTokenMint(address to, uint256 amount, address controlledToken, address referrer) external override {
-        
-        address[] memory faucets = getAddresses();
-        
-        for(uint256 i = 0; i < faucets.length; i++){
-            TokenFaucet(faucets[i]).beforeTokenMint(to, amount, controlledToken, referrer);
+
+        address faucet = addressList.start();
+
+        while(faucet != addressList.end()){
+            TokenFaucet(faucet).beforeTokenMint(to, amount, controlledToken, referrer);
+            faucet = addressList.next(faucet);
         }
     }
 
@@ -40,10 +41,11 @@ contract MultiTokenFaucet is Ownable, TokenListener, AddressRegistry {
     /// @param controlledToken The controlledToken address
     function beforeTokenTransfer(address from, address to, uint256 amount, address controlledToken) external override {
 
-        address[] memory faucets = getAddresses();
-        
-        for(uint256 i = 0; i < faucets.length; i++){
-            TokenFaucet(faucets[i]).beforeTokenTransfer(from, to, amount, controlledToken);
+        address faucet = addressList.start();
+
+        while(faucet != addressList.end()){
+            TokenFaucet(faucet).beforeTokenTransfer(from, to, amount, controlledToken);
+            faucet = addressList.next(faucet);
         }
     }
 
