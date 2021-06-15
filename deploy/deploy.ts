@@ -77,9 +77,6 @@ const deployFunction: any = async function (hre: HardhatRuntimeEnvironment) {
   // 31337 is unit testing, 1337 is for coverage
   const isTestEnvironment = chainId === 31337 || chainId === 1337;
 
-  const block = await ethers.provider.getBlock("latest")
-  console.log("block number is ", block.number)
-
   const signer = ethers.provider.getSigner(deployer);
 
   dim('\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~');
