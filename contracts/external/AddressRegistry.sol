@@ -24,8 +24,10 @@ contract AddressRegistry is OwnableUpgradeable {
 
     /// @notice Storage field for what type of contract this Registry is storing 
     string public addressType;    
-
-
+    
+    /// @notice Initializes the AddressRegistry
+    /// @param _addressType The Type of contract the AddressRegistry will hold
+    /// @param _owner The address of the contract owner
     function initializeAddressRegistry(string memory _addressType, address _owner) internal {
         __Ownable_init();
         transferOwnership(_owner);
@@ -33,11 +35,9 @@ contract AddressRegistry is OwnableUpgradeable {
         addressList.initialize();
     }
 
-
-
     /// @notice Returns an array of all contract addresses in the linked list
     /// @return Array of contract addresses
-    function getAddresses() view public returns(address[] memory) {
+    function getAddresses() view external returns(address[] memory) {
         return addressList.addressArray();
     } 
 

@@ -71,11 +71,14 @@ const deployFunction: any = async function (hre: HardhatRuntimeEnvironment) {
   const { getNamedAccounts, deployments, getChainId, ethers } = hre;
   const { deploy } = deployments;
 
-  let { deployer, admin, checkpointManager, fxChild, fxRoot } = await getNamedAccounts();
+  let { deployer, admin } = await getNamedAccounts();
 
   const chainId = parseInt(await getChainId());
   // 31337 is unit testing, 1337 is for coverage
   const isTestEnvironment = chainId === 31337 || chainId === 1337;
+
+  const block = await ethers.provider.getBlock("latest")
+  console.log("block number is ", block.number)
 
   const signer = ethers.provider.getSigner(deployer);
 
@@ -111,13 +114,14 @@ const deployFunction: any = async function (hre: HardhatRuntimeEnvironment) {
 
   cyan(`now deploying using factoryDeploy`)
   // now deploy with generic proxy factory package
-  await factoryDeploy({
+  const result = await factoryDeploy({
     implementationAddress: multiTokenFaucet.address,
-    contractName: "MultiTokenFaucet",
+    contractName: "MultiTokenFaucetInstance",
     initializeData: initializerArgs,
     provider: ethers.provider,
     signer: signer
   })
+  console.log(result)
 
   green("Done!")
 };
