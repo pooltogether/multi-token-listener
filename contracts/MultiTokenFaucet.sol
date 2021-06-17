@@ -4,8 +4,6 @@ pragma solidity >=0.6.4 <=8.0.0;
 
 import "@pooltogether/pooltogether-contracts/contracts/token/TokenListener.sol";
 import "@pooltogether/pooltogether-contracts/contracts/token-faucet/TokenFaucet.sol";
-import "@openzeppelin/contracts-upgradeable/proxy/Initializable.sol";
-
 
 import "./external/AddressRegistry.sol";
 
