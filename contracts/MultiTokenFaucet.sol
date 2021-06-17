@@ -11,7 +11,7 @@ import "./external/AddressRegistry.sol";
 
 /// @title MultiTokenFaucet is an ownable contract which holds a number of TokenFaucets
 /// @notice MultiTokenFaucet passes through the ControlledToken beforeTokenMint and beforeTokenTransfer hooks to each TokenFaucet in its registry
-contract MultiTokenFaucet is Initializable, TokenListener, AddressRegistry {
+contract MultiTokenFaucet is TokenListener, AddressRegistry {
 
     /// @notice Initiaize the MultiTokenFaucet and Registry
     /// @param _owner The owner address

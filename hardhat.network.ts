@@ -51,7 +51,8 @@ if (mnemonic) {
   };
   networks.matic = {
     chainId: 137,
-    url: 'https://rpc-mainnet.maticvigil.com',
+    gasPrice: 9000000000,
+    url: "https://rpc-mainnet.matic.network",
     accounts: {
       mnemonic,
     },
