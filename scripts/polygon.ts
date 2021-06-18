@@ -5,22 +5,29 @@ const chalk = require("chalk")
 const { ethers, deployments, getChainId } = hardhat
 
 const tokenFaucetProxyFactoryAddress = "0xB3e8bBD6CB0443e0dc59602825Dc6854D7ec5c4b"
+const multiTokenFaucetImplemenationAddress = "0xB294D9344186C613bb8F1b92E71f6954b414bD29" 
 
-const multiTokenFaucetImplemenationAddress = "0xB294D9344186C613bb8F1b92E71f6954b414bD29" // update to that in when deployment ran
-const pool = "0x08193764bd81a742c15125e48f41b1232068c912" //erc20 mintable for polygon test
+//pre-existing erc20 mintable on Polygon - used as ASSET token
+const pool = "0x08193764bd81a742c15125e48f41b1232068c912" 
 
+// addresses asscoiated with mnemonic
 const account2 = "0x8838f17ECe48008bDb723a9A52f6AD8A83013Ae8" // account with zero "pool" balance => depositTo() called with this as arg
+const walletAddress = "0x3F0556bCA55Bdbb78A9316936067a47fd4C4C4f4"
 
+// deployed with builder GUI
+const prizeStrategyAddress = "0x0D3AA1b40383729b8fE3d5EC7881FD4E427854A2"
+const prizePoolAddress = "0xbf9bbc18f17e29dd13ba38f67c1e8ecb4b7c7974"
+
+// deployed with generic proxy factory
+const multiTokenFaucetAddress = "0xa5eec0d6af0b3d31ef62aa5614b7dd56f60ebbb0"
+
+
+// helper function
 async function getProxy(tx:any, signer: any) { 
-
     const tokenFaucetProxyFactory = await ethers.getContractAt('TokenFaucetProxyFactory', tokenFaucetProxyFactoryAddress, signer)
-    console.log("waiting for tx..")
+    console.log(`waiting for tx.. ${tx.hash}`)
     await ethers.provider.waitForTransaction(tx.hash)
-
     const createResultReceipt = await ethers.provider.getTransactionReceipt(tx.hash)
-
-
-    console.log(createResultReceipt)
     const createResultEvents = createResultReceipt.logs.map((log:any) => { try { return tokenFaucetProxyFactory.interface.parseLog(log) } catch (e) { return null } })
     return createResultEvents[0].args.proxy
 }
@@ -28,8 +35,7 @@ async function getProxy(tx:any, signer: any) {
 
 
 async function runSetUp() {
-    const walletAddress = "0x3F0556bCA55Bdbb78A9316936067a47fd4C4C4f4"
-
+    
     const signers = await ethers.getSigners()
     const gnosisSafe = signers[0]
 
@@ -40,7 +46,7 @@ async function runSetUp() {
     const poolToken = await ethers.getContractAt('IERC20Upgradeable', pool, gnosisSafe)
 
     // existing maninnet multiple winners addresses
-    const usdcPrizeStrategy = await ethers.getContractAt('MultipleWinners', '0x6A33C675C195A9F6DC6758c32e2f659AE8609035', gnosisSafe)
+    const usdcPrizeStrategy = await ethers.getContractAt('MultipleWinners', prizeStrategyAddress, gnosisSafe)
 
 
     const multiTokenFaucetAbi = (await hardhat.artifacts.readArtifact("MultiTokenFaucet")).abi
@@ -62,16 +68,18 @@ async function runSetUp() {
     //     provider: ethers.provider,
     //     signer: gnosisSafe
     // })
+    // console.log("waiting to confirm ", multiTokenFaucetResult.transactionHash)
+    // await ethers.provider.waitForTransaction(multiTokenFaucetResult.transactionHash)
+
     // console.log("MultiTokenFaucet at ", multiTokenFaucetResult.address)
 
-    const multiTokenFaucetAddress = "0x2dd1CB560366fF3cbaE4310C4321148f0ee995F5"
 
-
-    const daiDripAmount = ethers.utils.parseEther('0.02')
-    const daiDripRate = daiDripAmount.div(98 * 24 * 3600)
+    const mintDripAmount = ethers.utils.parseEther('5')
+    const mintSponsorshipDripAmount = ethers.utils.parseEther('10')
+    const mintDripRate = mintDripAmount.div(3600) // disperse over 1 hour
 
     console.log(`Creating usdc TokenFaucet...`)
-    const usdcTokenFaucetTx = await tokenFaucetProxyFactory.create(pool, await usdcPrizeStrategy.ticket(), daiDripRate) // or usdcPrizeStrategy.sponsorship()
+    const usdcTokenFaucetTx = await tokenFaucetProxyFactory.create(pool, await usdcPrizeStrategy.sponsorship(), mintDripRate) // or usdcPrizeStrategy.sponsorship()
     
     console.log("usdcTokenFaucetTx", usdcTokenFaucetTx)
     
@@ -79,8 +87,8 @@ async function runSetUp() {
     const usdcTokenFaucet = await getProxy(usdcTokenFaucetTx, gnosisSafe)
     console.log(`Created usdc TokenFaucet at ${usdcTokenFaucet}!`)
     
-    await poolToken.transfer(usdcTokenFaucet, daiDripAmount)
-    console.log(`Transferred ${daiDripAmount} to ${usdcTokenFaucet}`)
+    await poolToken.transfer(usdcTokenFaucet, mintDripAmount)
+    console.log(`Transferred ${mintDripAmount} to ${usdcTokenFaucet}`)
 
     // add Faucets to MultiTokenFaucet
     const multiTokenFaucet = await ethers.getContractAt("MultiTokenFaucet", multiTokenFaucetAddress, gnosisSafe)
@@ -93,19 +101,18 @@ async function runSetUp() {
     console.log("tokenListeners set")
 
     // now deposit into pool 
-    const prizePoolAddress = "0xA74411AC118853682C323E5a76031bf6363d1287"
     const prizePool = await ethers.getContractAt('YieldSourcePrizePool', prizePoolAddress, gnosisSafe)
     
     const token = await ethers.getContractAt('IERC20Upgradeable', await prizePool.token(), gnosisSafe)
 
     console.log("prizePool.token() is ", await prizePool.token())
 
-    // const decimals = await token.decimals() 
-    const decimals = 6
+    // const decimals = await token.decimals() // not supported on USDC polygon deployment
+    const decimals = 6 // USDC
 
     const prizeStrategy = await ethers.getContractAt('MultipleWinners', await prizePool.prizeStrategy(), gnosisSafe)
     
-    const ticketAddress = await prizeStrategy.ticket()
+    const sponsorshipTicketAddress = await prizeStrategy.sponsorship()
   
     const depositAmount = ethers.utils.parseUnits('0.5', decimals)
   
@@ -116,13 +123,13 @@ async function runSetUp() {
     const approveResult = await token.approve(prizePool.address, depositAmount)
     await ethers.provider.waitForTransaction(approveResult.hash)
 
-    console.log(`Depositing into Pool with ${gnosisSafe.address}, ${ethers.utils.formatUnits(depositAmount, decimals)}, ${ticketAddress} ${ethers.constants.AddressZero}...`)
+    console.log(`Depositing into Pool with ${gnosisSafe.address}, ${ethers.utils.formatUnits(depositAmount, decimals)}, ${sponsorshipTicketAddress} ${ethers.constants.AddressZero}...`)
     
 
-    await prizePool.depositTo(account2, depositAmount, ticketAddress, ethers.constants.AddressZero)
+    await prizePool.depositTo(walletAddress, depositAmount, sponsorshipTicketAddress, ethers.constants.AddressZero)
 
 
-     console.log("balance of before claim : ", await poolToken.balanceOf(account2)) // address of an unlocked account holding ptDai
+     console.log("balance of before claim : ", await poolToken.balanceOf(walletAddress)) // address of an unlocked account holding ptDai
     // wait and then check using runClaim()
 }
 
@@ -135,18 +142,20 @@ async function runClaim(usdcTokenFaucet: string){
     const signers = await ethers.getSigners()
     const gnosisSafe = signers[0]
 
+    const poolToken = await ethers.getContractAt('IERC20Upgradeable', pool, gnosisSafe)
+    console.log("balance of before claim : ", await poolToken.balanceOf(walletAddress)) 
+
     const usdcTokenFaucetContract = await ethers.getContractAt("TokenFaucet", usdcTokenFaucet, gnosisSafe)
 
-    console.log("userState of ", account2)
-    console.log(await usdcTokenFaucetContract.userStates(account2))
+    console.log("userState of ", walletAddress)
+    console.log(await usdcTokenFaucetContract.userStates(walletAddress))
 
-    console.log("claiming for ", account2)
-    const usdcFaucetClaimResult = await usdcTokenFaucetContract.claim(account2)
+    console.log("claiming for ", walletAddress)
+    const usdcFaucetClaimResult = await usdcTokenFaucetContract.claim(walletAddress)
     await ethers.provider.waitForTransaction(usdcFaucetClaimResult.hash)
 
-    const poolToken = await ethers.getContractAt('IERC20Upgradeable', pool, gnosisSafe)
-    console.log("balance of after claim : ", await poolToken.balanceOf(account2))
-
+    
+    console.log("balance of after claim : ", await poolToken.balanceOf(walletAddress)) // this number should be greater than the beforeClaim
 }
 
-runClaim("0x4AaFA507f255a9f2b7bc36c192dC6Dc13169BF09")
+runClaim("0x2f5044b85f60F545Cb4243c79eB490f43682F543") // populate with usdcFaucetAddress from earlier
