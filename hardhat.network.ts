@@ -22,6 +22,7 @@ if (alchemyUrl && process.env.FORK_ENABLED && mnemonic) {
     chainId: 1,
     forking: {
       url: alchemyUrl,
+      blockNumber: 12635100
     },
     accounts: {
       mnemonic,
@@ -50,7 +51,8 @@ if (mnemonic) {
   };
   networks.matic = {
     chainId: 137,
-    url: 'https://rpc-mainnet.maticvigil.com',
+    gasPrice: 9000000000,
+    url: "https://rpc-mainnet.matic.network",
     accounts: {
       mnemonic,
     },

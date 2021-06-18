@@ -2,12 +2,12 @@
 
 pragma solidity >=0.6.4 <=8.0.0;
 
-import "@openzeppelin/contracts/access/Ownable.sol";
+import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 
 import "./MappedSinglyLinkedList.sol";
 
 ///@notice A registry to hold Contract addresses.  Underlying data structure is a singly linked list. 
-contract AddressRegistry is Ownable {
+contract AddressRegistry is OwnableUpgradeable {
 
     using MappedSinglyLinkedList for MappedSinglyLinkedList.Mapping;
 
@@ -24,19 +24,20 @@ contract AddressRegistry is Ownable {
 
     /// @notice Storage field for what type of contract this Registry is storing 
     string public addressType;    
-
-    /// @notice Contract constructor sets addressType, intializes list and transfers ownership
-    /// @param _addressType The type of contracts stored in this registry 
-    /// @param _owner The address to set as owner of the contract
-    constructor(string memory _addressType, address _owner) Ownable() public {
+    
+    /// @notice Initializes the AddressRegistry
+    /// @param _addressType The Type of contract the AddressRegistry will hold
+    /// @param _owner The address of the contract owner
+    function initializeAddressRegistry(string memory _addressType, address _owner) internal {
+        __Ownable_init();
+        transferOwnership(_owner);
         addressType = _addressType;
         addressList.initialize();
-        transferOwnership(_owner);
     }
 
     /// @notice Returns an array of all contract addresses in the linked list
     /// @return Array of contract addresses
-    function getAddresses() view public returns(address[] memory) {
+    function getAddresses() view external returns(address[] memory) {
         return addressList.addressArray();
     } 
 

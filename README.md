@@ -25,6 +25,18 @@ These contracts can be deployed to a network by running:
 Run the unit tests locally with:
 `yarn test`
 
+## Fork Test
+In one terminal window run:
+`yarn start-fork`
+
+This will start the fork and deploy the implementation contract and also an instance of the MultiTokenFaucet.
+
+In another terminal window run:
+`yarn run-fork`
+
+This will create several TokenFaucets, attach them to the MultiTokenFaucet instance, and set this address as the `tokenListener` for three prize strategies. Finally a rewards eligible ticket holders address balance is checked over time.   
+
+
 ## Coverage
 Generate the test coverage report with:
 `yarn coverage`

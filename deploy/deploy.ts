@@ -2,7 +2,7 @@ import chalk from 'chalk';
 
 import { HardhatRuntimeEnvironment } from 'hardhat/types';
 import { DeployFunction, DeployResult } from 'hardhat-deploy/types';
-
+import { factoryDeploy } from "@pooltogether/pooltogether-proxy-factory-package"
 
 const displayLogs = !process.env.HIDE_DEPLOY_LOG;
 
@@ -71,7 +71,7 @@ const deployFunction: any = async function (hre: HardhatRuntimeEnvironment) {
   const { getNamedAccounts, deployments, getChainId, ethers } = hre;
   const { deploy } = deployments;
 
-  let { deployer, admin, checkpointManager, fxChild, fxRoot } = await getNamedAccounts();
+  let { deployer, admin } = await getNamedAccounts();
 
   const chainId = parseInt(await getChainId());
   // 31337 is unit testing, 1337 is for coverage
@@ -92,13 +92,34 @@ const deployFunction: any = async function (hre: HardhatRuntimeEnvironment) {
 
   dim(`deployer: ${admin}`);
 
-  cyan(`\nDeploying MultiTokenFaucet...`);
+  cyan(`\nDeploying MultiTokenFaucet Implementation...`);
   const multiTokenFaucet = await deploy('MultiTokenFaucet', {
     from: deployer,
-    args: [deployer]
+    args: [],
+    skipIfAlreadyDeployed: true
   });
-  displayResult('MultiTokenFaucet', multiTokenFaucet);
+  displayResult('MultiTokenFaucet Implementation', multiTokenFaucet);
   
+  const multiTokenFaucetAbi = (await hre.artifacts.readArtifact("MultiTokenFaucet")).abi
+  const multiTokenFaucetInterface = new ethers.utils.Interface(multiTokenFaucetAbi)
+
+  const initializerArgs: string = multiTokenFaucetInterface.encodeFunctionData(multiTokenFaucetInterface.getFunction("initialize(address)"),
+      [
+        deployer  // _owner
+      ]
+  )
+
+  cyan(`now deploying using factoryDeploy`)
+  // now deploy with generic proxy factory package
+  const result = await factoryDeploy({
+    implementationAddress: multiTokenFaucet.address,
+    contractName: "MultiTokenFaucetInstance",
+    initializeData: initializerArgs,
+    provider: ethers.provider,
+    signer: signer
+  })
+  console.log(result)
+
   green("Done!")
 };
 

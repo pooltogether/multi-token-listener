@@ -1,8 +1,7 @@
-// SPDX-License-Identifier: GPL-3.0
+// SPDX-License-Identifier: MIT
 
 pragma solidity >=0.6.4 <=8.0.0;
 
-import "@openzeppelin/contracts/access/Ownable.sol";
 import "@pooltogether/pooltogether-contracts/contracts/token/TokenListener.sol";
 import "@pooltogether/pooltogether-contracts/contracts/token-faucet/TokenFaucet.sol";
 
@@ -10,11 +9,12 @@ import "./external/AddressRegistry.sol";
 
 /// @title MultiTokenFaucet is an ownable contract which holds a number of TokenFaucets
 /// @notice MultiTokenFaucet passes through the ControlledToken beforeTokenMint and beforeTokenTransfer hooks to each TokenFaucet in its registry
-contract MultiTokenFaucet is Ownable, TokenListener, AddressRegistry {
+contract MultiTokenFaucet is TokenListener, AddressRegistry {
 
-
-    constructor(address _owner) public AddressRegistry("TokenFaucets", _owner) {
-        transferOwnership(_owner);
+    /// @notice Initiaize the MultiTokenFaucet and Registry
+    /// @param _owner The owner address
+    function initialize(address _owner) public initializer {
+        initializeAddressRegistry("TokenFaucets", _owner);
     }
 
     /// @notice Pass through the beforeTokenMint hook to all the registry TokenFaucets
