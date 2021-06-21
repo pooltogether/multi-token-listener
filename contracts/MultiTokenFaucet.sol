@@ -7,11 +7,11 @@ import "@pooltogether/pooltogether-contracts/contracts/token-faucet/TokenFaucet.
 
 import "./external/AddressRegistry.sol";
 
-/// @title MultiTokenFaucet is an ownable contract which holds a number of TokenFaucets
-/// @notice MultiTokenFaucet passes through the ControlledToken beforeTokenMint and beforeTokenTransfer hooks to each TokenFaucet in its registry
-contract MultiTokenFaucet is TokenListener, AddressRegistry {
+/// @title MultiTokenListener is an ownable contract which holds a number of TokenFaucets
+/// @notice MultiTokenListener passes through the ControlledToken beforeTokenMint and beforeTokenTransfer hooks to each TokenFaucet in its registry
+contract MultiTokenListener is TokenListener, AddressRegistry {
 
-    /// @notice Initiaize the MultiTokenFaucet and Registry
+    /// @notice Initiaize the MultiTokenListener and Registry
     /// @param _owner The owner address
     function initialize(address _owner) public initializer {
         initializeAddressRegistry("TokenFaucets", _owner);

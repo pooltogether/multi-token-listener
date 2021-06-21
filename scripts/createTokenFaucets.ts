@@ -5,7 +5,7 @@ const chalk = require("chalk")
 const { ethers, deployments, getChainId } = hardhat
 
 const tokenFaucetProxyFactoryAddress = "0xE4E9cDB3E139D7E8a41172C20b6Ed17b6750f117" // deployed on real mainnet -dont change
-const multiTokenFaucetImplemenationAddress = "0x037e907fFA9df4f8D13dA5B0BE5e9F317AD6e0Ef" // update to that in when deployment ran
+const multiTokenListenerImplemenationAddress = "0x037e907fFA9df4f8D13dA5B0BE5e9F317AD6e0Ef" // update to that in when deployment ran
 const pool = "0x0cec1a9154ff802e7934fc916ed7ca50bde6844e"
 const timelockAddress = "0x42cd8312d2bce04277dd5161832460e95b24262e"
 
@@ -38,26 +38,26 @@ async function run() {
   const usdcPrizeStrategy = await ethers.getContractAt('MultipleWinners', '0x3d9946190907ada8b70381b25c71eb9adf5f9b7b', gnosisSafe)
   const uniPrizeStrategy = await ethers.getContractAt('MultipleWinners', '0xe8726B85236a489a8E84C56c95790d07a368f913', gnosisSafe)
 
-  const multiTokenFaucetAbi = (await hardhat.artifacts.readArtifact("MultiTokenFaucet")).abi
-  const multiTokenFaucetInterface = new ethers.utils.Interface(multiTokenFaucetAbi)
+  const multiTokenListenerAbi = (await hardhat.artifacts.readArtifact("MultiTokenListener")).abi
+  const multiTokenListenerInterface = new ethers.utils.Interface(multiTokenListenerAbi)
 
-  const initializerArgs: string = multiTokenFaucetInterface.encodeFunctionData(multiTokenFaucetInterface.getFunction("initialize(address)"),
+  const initializerArgs: string = multiTokenListenerInterface.encodeFunctionData(multiTokenListenerInterface.getFunction("initialize(address)"),
       [
         timelockAddress  // _owner
       ]
   )
 
-  console.log("multiTokenFaucetImplemenationAddress ", multiTokenFaucetImplemenationAddress)
+  console.log("multiTokenListenerImplemenationAddress ", multiTokenListenerImplemenationAddress)
 
-  console.log(`now deploying multitokenfaucet using factoryDeploy`)
-  const multiTokenFaucetResult = await factoryDeploy({
-    implementationAddress: multiTokenFaucetImplemenationAddress,
-    contractName: "MultiTokenFaucetInstance",
+  
+  const multiTokenListenerResult = await factoryDeploy({
+    implementationAddress: multiTokenListenerImplemenationAddress,
+    contractName: "MultiTokenListenerInstance",
     initializeData: initializerArgs,
     provider: ethers.provider,
     signer: gnosisSafe
   })
-  console.log("MultiTokenFaucet at ", multiTokenFaucetResult.address)
+  console.log("MultiTokenListener at ", multiTokenListenerResult.address)
 
 
   console.log(`Creating dai TokenFaucet...`)
@@ -94,16 +94,16 @@ async function run() {
   await poolToken.transfer(uniTokenFaucet, uniDripAmount)
   console.log(`Transferred ${uniDripAmount} to ${uniTokenFaucet}`)
 
-  // add Faucets to MultiTokenFaucet
-  const multiTokenFaucet = await ethers.getContractAt("MultiTokenFaucet", multiTokenFaucetResult.address, gnosisSafe)
-  console.log("adding TokenFaucets to MultiTokenFaucet ", daiTokenFaucet, usdcTokenFaucet, uniTokenFaucet)
-  const addAddressesResult = await multiTokenFaucet.addAddresses([daiTokenFaucet, usdcTokenFaucet, uniTokenFaucet])
+  // add Faucets to MultiTokenListener
+  const multiTokenListener = await ethers.getContractAt("MultiTokenListener", multiTokenListenerResult.address, gnosisSafe)
+  console.log("adding TokenFaucets to MultiTokenListener ", daiTokenFaucet, usdcTokenFaucet, uniTokenFaucet)
+  const addAddressesResult = await multiTokenListener.addAddresses([daiTokenFaucet, usdcTokenFaucet, uniTokenFaucet])
 
   // set token listeners on strategies
   console.log("setting tokenlisteners")
-  await daiPrizeStrategy.setTokenListener(multiTokenFaucetResult.address)
-  await usdcPrizeStrategy.setTokenListener(multiTokenFaucetResult.address)
-  await uniPrizeStrategy.setTokenListener(multiTokenFaucetResult.address)
+  await daiPrizeStrategy.setTokenListener(multiTokenListenerResult.address)
+  await usdcPrizeStrategy.setTokenListener(multiTokenListenerResult.address)
+  await uniPrizeStrategy.setTokenListener(multiTokenListenerResult.address)
   console.log("tokenListeners set")
 
 
