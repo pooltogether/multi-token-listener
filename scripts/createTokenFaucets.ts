@@ -38,6 +38,40 @@ async function run() {
   const usdcPrizeStrategy = await ethers.getContractAt('MultipleWinners', '0x3d9946190907ada8b70381b25c71eb9adf5f9b7b', gnosisSafe)
   const uniPrizeStrategy = await ethers.getContractAt('MultipleWinners', '0xe8726B85236a489a8E84C56c95790d07a368f913', gnosisSafe)
 
+
+  const userAddress = "0x58f40a196d59a458a75478a2f9fc81ada5d5c710"
+  await binance.sendTransaction({ to: userAddress, value: ethers.utils.parseEther('1') })
+  await hardhat.ethers.provider.send("hardhat_impersonateAccount",[userAddress])
+
+  const userAddressSigner = await ethers.provider.getUncheckedSigner(userAddress)
+  const daiTokenAddress = "0x6b175474e89094c44da98b954eedeac495271d0f"
+
+  const daiPrizePool = await ethers.getContractAt('CompoundPrizePool', "0xEBfb47A7ad0FD6e57323C8A42B2E5A6a4F68fc1a", userAddressSigner)
+
+  const depositAmount = ethers.utils.parseUnits('5', 18)
+  const totalDepositsAmount = ethers.utils.parseUnits('50', 18)
+  
+  // get dai for address
+  let daiToken = await ethers.getContractAt("IERC20Upgradeable",daiTokenAddress, binance)
+  await daiToken.transfer(userAddress, totalDepositsAmount)
+
+  daiToken = await ethers.getContractAt("IERC20Upgradeable", daiTokenAddress, userAddressSigner)
+  await daiToken.approve(daiPrizePool.address, depositAmount)
+  
+  const singleListenerDeposit = await daiPrizePool.depositTo(userAddress, depositAmount, await daiPrizeStrategy.ticket(), ethers.constants.AddressZero)
+  const singleListenerDepositReceipt = await ethers.provider.getTransactionReceipt(singleListenerDeposit.hash)
+  console.log("gasUsed with one token listeners: ", singleListenerDepositReceipt.gasUsed.toString())
+
+  //depositTo() consumes 380279 gas
+
+  console.log("withdrawing")
+  const singleWithdrawAmount = ethers.utils.parseEther("1")
+  const singleWithdrawResult = await daiPrizePool.withdrawInstantlyFrom(userAddress, singleWithdrawAmount, await daiPrizeStrategy.ticket(), singleWithdrawAmount)
+  const singleWithdrawReceipt = await ethers.provider.getTransactionReceipt(singleWithdrawResult.hash)
+  console.log("gasUsed with single token listeners: ", singleWithdrawReceipt.gasUsed.toString())
+
+  // withdrawInstantlyFrom() from consumes 414059 gas
+
   const multiTokenListenerAbi = (await hardhat.artifacts.readArtifact("MultiTokenListener")).abi
   const multiTokenListenerInterface = new ethers.utils.Interface(multiTokenListenerAbi)
 
@@ -102,10 +136,27 @@ async function run() {
   // set token listeners on strategies
   console.log("setting tokenlisteners")
   await daiPrizeStrategy.setTokenListener(multiTokenListenerResult.address)
-  await usdcPrizeStrategy.setTokenListener(multiTokenListenerResult.address)
-  await uniPrizeStrategy.setTokenListener(multiTokenListenerResult.address)
+  // await usdcPrizeStrategy.setTokenListener(multiTokenListenerResult.address)
+  // await uniPrizeStrategy.setTokenListener(multiTokenListenerResult.address)
   console.log("tokenListeners set")
 
+  // deposit into pool and for gas comsumption
+  daiToken = await ethers.getContractAt("IERC20Upgradeable", daiTokenAddress, userAddressSigner)
+  console.log("approving dai")
+  await daiToken.approve(daiPrizePool.address, depositAmount)
+  console.log("depositing")
+  const depositResult = await daiPrizePool.depositTo(userAddress, depositAmount,
+     await daiPrizeStrategy.ticket(), ethers.constants.AddressZero)
+  const depositReceipt = await ethers.provider.getTransactionReceipt(depositResult.hash)
+  console.log("gasUsed with three token listeners: ", depositReceipt.gasUsed.toString())
+  //depositTo () consumes 395271 gas
+  
+  console.log("withdrawing")
+  const withdrawAmount = ethers.utils.parseEther("1")
+  const withdrawResult = await daiPrizePool.withdrawInstantlyFrom(userAddress, withdrawAmount, await daiPrizeStrategy.ticket(), withdrawAmount)
+  const withdrawReceipt = await ethers.provider.getTransactionReceipt(withdrawResult.hash)
+  console.log("gasUsed with three token listeners: ", withdrawReceipt.gasUsed.toString())
+  // withdrawInstantlyFrom() gas used 429059
 
   console.log("balance of before claim : ", await poolToken.balanceOf("0x58f40a196d59a458a75478a2f9fc81ada5d5c710")) // address of an unlocked account holding ptDai
   console.log(`moving 30 days forward in time`)
