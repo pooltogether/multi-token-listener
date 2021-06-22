@@ -107,8 +107,8 @@ async function run() {
   console.log(`Transferred ${daiDripAmount} to ${daiTokenFaucet}`)
 
 
-  console.log(`Creating dai TokenFaucet2...`)
-  const daiTokenFaucet2Tx = await tokenFaucetProxyFactory.create(pool, await daiPrizeStrategy.ticket(), daiDripRate)
+  console.log(`Creating dai sponsorship TokenFaucet2...`)
+  const daiTokenFaucet2Tx = await tokenFaucetProxyFactory.create(pool, await daiPrizeStrategy.sponsorship(), daiDripRate)
   console.log(`Retrieving proxy...`)
   const daiTokenFaucet2 = await getProxy(daiTokenFaucet2Tx)
   
@@ -131,7 +131,7 @@ async function run() {
   const multiTokenListener = await ethers.getContractAt("MultiTokenListener", multiTokenListenerResult.address, gnosisSafe)
   console.log("adding TokenFaucets to MultiTokenListener ", daiTokenFaucet, daiTokenFaucet2, daiTokenFaucet3)
   
-  const tokenFaucetArray = [daiTokenFaucet, daiTokenFaucet3]
+  const tokenFaucetArray = [daiTokenFaucet, daiTokenFaucet2]
   console.log(`adding ${tokenFaucetArray.length} faucets`)
   const addAddressesResult = await multiTokenListener.addAddresses(tokenFaucetArray)
 
@@ -165,6 +165,17 @@ async function run() {
   const daiFaucetClaimResult = await daiTokenFaucetContract.claim(userAddress)
   console.log("balance of after claim : ", await poolToken.balanceOf(userAddress))
 
+  await daiToken.approve(daiPrizePool.address, depositAmount)
+  console.log("depositing")
+  const secondDepositResult = await daiPrizePool.depositTo(userAddress, depositAmount, await daiPrizeStrategy.ticket(), ethers.constants.AddressZero)
+  const secondDepositReceipt = await ethers.provider.getTransactionReceipt(secondDepositResult.hash)
+  console.log(`second: depositTo() gasUsed with ${(await multiTokenListener.getAddresses()).length} token listeners: , ${secondDepositReceipt.gasUsed.toString()}`)
+
+
+  const secondWithdrawResult = await daiPrizePool.withdrawInstantlyFrom(userAddress, withdrawAmount, await daiPrizeStrategy.ticket(), withdrawAmount)
+  const secondWithdrawReceipt = await ethers.provider.getTransactionReceipt(secondWithdrawResult.hash)
+  console.log(`withdrawInstantlyFrom() gasUsed with ${(await multiTokenListener.getAddresses()).length} token listeners: , ${secondWithdrawReceipt.gasUsed.toString()}`)
+
 
 }
 async function increaseTime(time:any) {
@@ -185,3 +196,12 @@ run()
   // withdrawInstantlyFrom() from consumes 400,189 gas (existing)
   // withdrawInstantlyFrom() gas used 495,958 : 2 listeners (+95,769)
   // withdrawInstantlyFrom() gas used 572,289 : 3 listeners (+172,100)
+
+
+  // One Ticket measure Faucet + One Sponsorship measure Faucet
+  // depositTo() 390,553
+  // withdrawInstantlyFrom() 424,343
+
+  // second transactions (when faucets are intialized)
+   // depositTo() consumes 375,561
+   // withdrawInstantlyFrom() consumes 409,343
