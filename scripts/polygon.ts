@@ -158,4 +158,20 @@ async function runClaim(usdcTokenFaucet: string){
     console.log("balance of after claim : ", await poolToken.balanceOf(walletAddress)) // this number should be greater than the beforeClaim
 }
 
-runClaim("0x2f5044b85f60F545Cb4243c79eB490f43682F543") // populate with usdcFaucetAddress from earlier
+// runClaim("0x2f5044b85f60F545Cb4243c79eB490f43682F543") // populate with usdcFaucetAddress from earlier
+
+
+async function addAddres(){
+
+    const signers = await ethers.getSigners()
+    const gnosisSafe = signers[0]
+
+    const multiTokenFaucet = await ethers.getContractAt("MultiTokenFaucet", "0xA5EEc0d6aF0B3d31EF62AA5614B7dD56f60ebBB0", gnosisSafe)
+
+    console.log(await multiTokenFaucet.addAddresses(["0xc2462D3639eB1e83AF8281A1e1034E1f0D432cB0"]))
+
+    
+
+}
+
+addAddres()

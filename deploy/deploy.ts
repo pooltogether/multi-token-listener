@@ -80,7 +80,7 @@ const deployFunction: any = async function (hre: HardhatRuntimeEnvironment) {
   const signer = ethers.provider.getSigner(deployer);
 
   dim('\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~');
-  dim('PoolTogether MultiTokenFaucet Deploy Script');
+  dim('PoolTogether MultiTokenListener Deploy Script');
   dim('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n');
 
   dim(`network: ${chainName(chainId)} (${isTestEnvironment ? 'local' : 'remote'})`);
@@ -92,18 +92,18 @@ const deployFunction: any = async function (hre: HardhatRuntimeEnvironment) {
 
   dim(`deployer: ${admin}`);
 
-  cyan(`\nDeploying MultiTokenFaucet Implementation...`);
-  const multiTokenFaucet = await deploy('MultiTokenFaucet', {
+  cyan(`\nDeploying MultiTokenListener Implementation...`);
+  const multiTokenListener = await deploy('MultiTokenListener', {
     from: deployer,
     args: [],
     skipIfAlreadyDeployed: true
   });
-  displayResult('MultiTokenFaucet Implementation', multiTokenFaucet);
+  displayResult('MultiTokenListener Implementation', multiTokenListener);
   
-  const multiTokenFaucetAbi = (await hre.artifacts.readArtifact("MultiTokenFaucet")).abi
-  const multiTokenFaucetInterface = new ethers.utils.Interface(multiTokenFaucetAbi)
+  const multiTokenListenerAbi = (await hre.artifacts.readArtifact("MultiTokenListener")).abi
+  const multiTokenListenerInterface = new ethers.utils.Interface(multiTokenListenerAbi)
 
-  const initializerArgs: string = multiTokenFaucetInterface.encodeFunctionData(multiTokenFaucetInterface.getFunction("initialize(address)"),
+  const initializerArgs: string = multiTokenListenerInterface.encodeFunctionData(multiTokenListenerInterface.getFunction("initialize(address)"),
       [
         deployer  // _owner
       ]
@@ -112,8 +112,8 @@ const deployFunction: any = async function (hre: HardhatRuntimeEnvironment) {
   cyan(`now deploying using factoryDeploy`)
   // now deploy with generic proxy factory package
   const result = await factoryDeploy({
-    implementationAddress: multiTokenFaucet.address,
-    contractName: "MultiTokenFaucetInstance",
+    implementationAddress: multiTokenListener.address,
+    contractName: "MultiTokenListenerInstance",
     initializeData: initializerArgs,
     provider: ethers.provider,
     signer: signer
