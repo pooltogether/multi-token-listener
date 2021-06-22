@@ -157,13 +157,13 @@ async function run() {
   console.log(`withdrawInstantlyFrom() gasUsed with ${(await multiTokenListener.getAddresses()).length} token listeners: , ${withdrawReceipt.gasUsed.toString()}`)
 
 
-  console.log("balance of before claim : ", await poolToken.balanceOf("0x58f40a196d59a458a75478a2f9fc81ada5d5c710")) // address of an unlocked account holding ptDai
+  console.log("balance of before claim : ", await poolToken.balanceOf(userAddress)) // address of an unlocked account holding ptDai
   console.log(`moving 30 days forward in time`)
   await increaseTime(30 * 24 * 3600)
   
   const daiTokenFaucetContract = await ethers.getContractAt("TokenFaucet", daiTokenFaucet, gnosisSafe)
-  const daiFaucetClaimResult = await daiTokenFaucetContract.claim("0x58f40a196d59a458a75478a2f9fc81ada5d5c710")
-  console.log("balance of after claim : ", await poolToken.balanceOf("0x58f40a196d59a458a75478a2f9fc81ada5d5c710"))
+  const daiFaucetClaimResult = await daiTokenFaucetContract.claim(userAddress)
+  console.log("balance of after claim : ", await poolToken.balanceOf(userAddress))
 
 
 }
