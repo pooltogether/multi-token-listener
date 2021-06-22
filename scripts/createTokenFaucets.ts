@@ -55,11 +55,13 @@ async function run() {
   daiToken = await ethers.getContractAt("IERC20Upgradeable", daiTokenAddress, userAddressSigner)
   await daiToken.approve(daiPrizePool.address, depositAmount)
   
+  // NOTE: these results are only valid on the first script run - as state is maintained between runs on fork
+  console.log("depositing")
   const singleListenerDeposit = await daiPrizePool.depositTo(userAddress, depositAmount, await daiPrizeStrategy.ticket(), ethers.constants.AddressZero)
   const singleListenerDepositReceipt = await ethers.provider.getTransactionReceipt(singleListenerDeposit.hash)
   console.log("depositTo() gasUsed with existing token listener: ", singleListenerDepositReceipt.gasUsed.toString())
 
-  //depositTo() consumes 381269 gas
+  //existing depositTo() consumes 381269 gas
 
   console.log("withdrawing")
   const singleWithdrawAmount = ethers.utils.parseEther("1")
@@ -67,7 +69,7 @@ async function run() {
   const singleWithdrawReceipt = await ethers.provider.getTransactionReceipt(singleWithdrawResult.hash)
   console.log("withdrawInstantlyFrom() gasUsed with existing token listeners: ", singleWithdrawReceipt.gasUsed.toString())
 
-  // withdrawInstantlyFrom() from consumes 400189 gas
+  // existing withdrawInstantlyFrom() from consumes 400189 gas
 
   const multiTokenListenerAbi = (await hardhat.artifacts.readArtifact("MultiTokenListener")).abi
   const multiTokenListenerInterface = new ethers.utils.Interface(multiTokenListenerAbi)
