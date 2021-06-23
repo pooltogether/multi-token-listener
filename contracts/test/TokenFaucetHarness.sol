@@ -5,6 +5,7 @@ import "@pooltogether/pooltogether-contracts/contracts/token-faucet/TokenFaucet.
 import "@pooltogether/pooltogether-contracts/contracts/token-faucet/TokenFaucetProxyFactory.sol";
 import "@pooltogether/pooltogether-contracts/contracts/prize-strategy/multiple-winners/MultipleWinners.sol"; 
 import "@pooltogether/pooltogether-contracts/contracts/prize-pool/yield-source/YieldSourcePrizePool.sol"; 
+import "@pooltogether/pooltogether-contracts/contracts/prize-pool/compound/CompoundPrizePool.sol"; 
 /* solium-disable security/no-block-members */
 contract TokenFaucetHarness is TokenFaucet {
 

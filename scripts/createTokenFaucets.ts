@@ -35,8 +35,41 @@ async function run() {
   const poolToken = await ethers.getContractAt('IERC20Upgradeable', pool, gnosisSafe)
   // existing maninnet multiple winners addresses
   const daiPrizeStrategy = await ethers.getContractAt('MultipleWinners', '0x178969A87a78597d303C47198c66F68E8be67Dc2', gnosisSafe)
-  const usdcPrizeStrategy = await ethers.getContractAt('MultipleWinners', '0x3d9946190907ada8b70381b25c71eb9adf5f9b7b', gnosisSafe)
-  const uniPrizeStrategy = await ethers.getContractAt('MultipleWinners', '0xe8726B85236a489a8E84C56c95790d07a368f913', gnosisSafe)
+
+  const userAddress = "0x58f40a196d59a458a75478a2f9fc81ada5d5c710"
+  await binance.sendTransaction({ to: userAddress, value: ethers.utils.parseEther('1') })
+  await hardhat.ethers.provider.send("hardhat_impersonateAccount",[userAddress])
+
+  const userAddressSigner = await ethers.provider.getUncheckedSigner(userAddress)
+  const daiTokenAddress = "0x6b175474e89094c44da98b954eedeac495271d0f"
+
+  const daiPrizePool = await ethers.getContractAt('CompoundPrizePool', "0xEBfb47A7ad0FD6e57323C8A42B2E5A6a4F68fc1a", userAddressSigner)
+
+  const depositAmount = ethers.utils.parseUnits('5', 18)
+  const totalDepositsAmount = ethers.utils.parseUnits('50', 18)
+  
+  // get dai for address
+  let daiToken = await ethers.getContractAt("IERC20Upgradeable",daiTokenAddress, binance)
+  await daiToken.transfer(userAddress, totalDepositsAmount)
+
+  daiToken = await ethers.getContractAt("IERC20Upgradeable", daiTokenAddress, userAddressSigner)
+  await daiToken.approve(daiPrizePool.address, depositAmount)
+  
+  // NOTE: these results are only valid on the first script run - as state is maintained between runs on fork
+  console.log("depositing")
+  const singleListenerDeposit = await daiPrizePool.depositTo(userAddress, depositAmount, await daiPrizeStrategy.ticket(), ethers.constants.AddressZero)
+  const singleListenerDepositReceipt = await ethers.provider.getTransactionReceipt(singleListenerDeposit.hash)
+  console.log("depositTo() gasUsed with existing token listener: ", singleListenerDepositReceipt.gasUsed.toString())
+
+  //existing depositTo() consumes 381269 gas
+
+  console.log("withdrawing")
+  const singleWithdrawAmount = ethers.utils.parseEther("1")
+  const singleWithdrawResult = await daiPrizePool.withdrawInstantlyFrom(userAddress, singleWithdrawAmount, await daiPrizeStrategy.ticket(), singleWithdrawAmount)
+  const singleWithdrawReceipt = await ethers.provider.getTransactionReceipt(singleWithdrawResult.hash)
+  console.log("withdrawInstantlyFrom() gasUsed with existing token listeners: ", singleWithdrawReceipt.gasUsed.toString())
+
+  // existing withdrawInstantlyFrom() from consumes 400189 gas
 
   const multiTokenListenerAbi = (await hardhat.artifacts.readArtifact("MultiTokenListener")).abi
   const multiTokenListenerInterface = new ethers.utils.Interface(multiTokenListenerAbi)
@@ -69,51 +102,79 @@ async function run() {
   const daiTokenFaucet = await getProxy(createResultTx)
   
   
-  console.log(`Created Dai TokenFaucet at ${daiTokenFaucet}!`)
+  console.log(`Created Dai TokenFaucet1 at ${daiTokenFaucet}!`)
   await poolToken.transfer(daiTokenFaucet, daiDripAmount)
   console.log(`Transferred ${daiDripAmount} to ${daiTokenFaucet}`)
 
 
-  console.log(`Creating usdc TokenFaucet...`)
-  const usdcTokenFaucetTx = await tokenFaucetProxyFactory.create(pool, await usdcPrizeStrategy.ticket(), daiDripRate)
+  console.log(`Creating dai sponsorship TokenFaucet2...`)
+  const daiTokenFaucet2Tx = await tokenFaucetProxyFactory.create(pool, await daiPrizeStrategy.sponsorship(), daiDripRate)
   console.log(`Retrieving proxy...`)
-  const usdcTokenFaucet = await getProxy(usdcTokenFaucetTx)
+  const daiTokenFaucet2 = await getProxy(daiTokenFaucet2Tx)
   
-  console.log(`Created usdc TokenFaucet at ${usdcTokenFaucet}!`)
-  await poolToken.transfer(usdcTokenFaucet, daiDripAmount)
-  console.log(`Transferred ${daiDripAmount} to ${usdcTokenFaucet}`)
+  console.log(`Created dai TokenFaucet2 at ${daiTokenFaucet2}!`)
+  await poolToken.transfer(daiTokenFaucet2, daiDripAmount)
+  console.log(`Transferred ${daiDripAmount} to ${daiTokenFaucet2}`)
 
 
-  console.log(`Creating uni TokenFaucet...`)
+  console.log(`Creating dai TokenFaucet3...`)
   const uniDripAmount = ethers.utils.parseEther('2000')
   const uniDripRate = uniDripAmount.div(98 * 24 * 3600)
-  const uniTokenFaucetTx = await tokenFaucetProxyFactory.create(pool, await uniPrizeStrategy.ticket(), uniDripRate)
-  const uniTokenFaucet = await getProxy(uniTokenFaucetTx)
+  const daiTokenFaucet3Tx = await tokenFaucetProxyFactory.create(pool, await daiPrizeStrategy.ticket(), uniDripRate)
+  const daiTokenFaucet3 = await getProxy(daiTokenFaucet3Tx)
   
-  console.log(`Created uni TokenFaucet at ${uniTokenFaucet}!`)
-  await poolToken.transfer(uniTokenFaucet, uniDripAmount)
-  console.log(`Transferred ${uniDripAmount} to ${uniTokenFaucet}`)
+  console.log(`Created uni TokenFaucet at ${daiTokenFaucet3}!`)
+  await poolToken.transfer(daiTokenFaucet3, uniDripAmount)
+  console.log(`Transferred ${uniDripAmount} to ${daiTokenFaucet3}`)
 
   // add Faucets to MultiTokenListener
   const multiTokenListener = await ethers.getContractAt("MultiTokenListener", multiTokenListenerResult.address, gnosisSafe)
-  console.log("adding TokenFaucets to MultiTokenListener ", daiTokenFaucet, usdcTokenFaucet, uniTokenFaucet)
-  const addAddressesResult = await multiTokenListener.addAddresses([daiTokenFaucet, usdcTokenFaucet, uniTokenFaucet])
+  console.log("adding TokenFaucets to MultiTokenListener ", daiTokenFaucet, daiTokenFaucet2, daiTokenFaucet3)
+  
+  const tokenFaucetArray = [daiTokenFaucet, daiTokenFaucet2]
+  console.log(`adding ${tokenFaucetArray.length} faucets`)
+  const addAddressesResult = await multiTokenListener.addAddresses(tokenFaucetArray)
 
   // set token listeners on strategies
   console.log("setting tokenlisteners")
   await daiPrizeStrategy.setTokenListener(multiTokenListenerResult.address)
-  await usdcPrizeStrategy.setTokenListener(multiTokenListenerResult.address)
-  await uniPrizeStrategy.setTokenListener(multiTokenListenerResult.address)
   console.log("tokenListeners set")
 
+  // deposit into pool and for gas comsumption
+  daiToken = await ethers.getContractAt("IERC20Upgradeable", daiTokenAddress, userAddressSigner)
+  console.log("approving dai")
+  await daiToken.approve(daiPrizePool.address, depositAmount)
+  console.log("depositing")
+  const depositResult = await daiPrizePool.depositTo(userAddress, depositAmount, await daiPrizeStrategy.ticket(), ethers.constants.AddressZero)
+  const depositReceipt = await ethers.provider.getTransactionReceipt(depositResult.hash)
+  console.log(`depositTo() gasUsed with ${(await multiTokenListener.getAddresses()).length} token listeners: , ${depositReceipt.gasUsed.toString()}`)
 
-  console.log("balance of before claim : ", await poolToken.balanceOf("0x58f40a196d59a458a75478a2f9fc81ada5d5c710")) // address of an unlocked account holding ptDai
+  
+  console.log("withdrawing")
+  const withdrawAmount = ethers.utils.parseEther("1")
+  const withdrawResult = await daiPrizePool.withdrawInstantlyFrom(userAddress, withdrawAmount, await daiPrizeStrategy.ticket(), withdrawAmount)
+  const withdrawReceipt = await ethers.provider.getTransactionReceipt(withdrawResult.hash)
+  console.log(`withdrawInstantlyFrom() gasUsed with ${(await multiTokenListener.getAddresses()).length} token listeners: , ${withdrawReceipt.gasUsed.toString()}`)
+
+
+  console.log("balance of before claim : ", await poolToken.balanceOf(userAddress)) // address of an unlocked account holding ptDai
   console.log(`moving 30 days forward in time`)
   await increaseTime(30 * 24 * 3600)
   
   const daiTokenFaucetContract = await ethers.getContractAt("TokenFaucet", daiTokenFaucet, gnosisSafe)
-  const daiFaucetClaimResult = await daiTokenFaucetContract.claim("0x58f40a196d59a458a75478a2f9fc81ada5d5c710")
-  console.log("balance of after claim : ", await poolToken.balanceOf("0x58f40a196d59a458a75478a2f9fc81ada5d5c710"))
+  const daiFaucetClaimResult = await daiTokenFaucetContract.claim(userAddress)
+  console.log("balance of after claim : ", await poolToken.balanceOf(userAddress))
+
+  await daiToken.approve(daiPrizePool.address, depositAmount)
+  console.log("depositing")
+  const secondDepositResult = await daiPrizePool.depositTo(userAddress, depositAmount, await daiPrizeStrategy.ticket(), ethers.constants.AddressZero)
+  const secondDepositReceipt = await ethers.provider.getTransactionReceipt(secondDepositResult.hash)
+  console.log(`second: depositTo() gasUsed with ${(await multiTokenListener.getAddresses()).length} token listeners: , ${secondDepositReceipt.gasUsed.toString()}`)
+
+
+  const secondWithdrawResult = await daiPrizePool.withdrawInstantlyFrom(userAddress, withdrawAmount, await daiPrizeStrategy.ticket(), withdrawAmount)
+  const secondWithdrawReceipt = await ethers.provider.getTransactionReceipt(secondWithdrawResult.hash)
+  console.log(`withdrawInstantlyFrom() gasUsed with ${(await multiTokenListener.getAddresses()).length} token listeners: , ${secondWithdrawReceipt.gasUsed.toString()}`)
 
 
 }
@@ -124,3 +185,23 @@ async function increaseTime(time:any) {
 }
 
 run()
+
+  // GAS CONSUMPTION RESULTS: 
+
+  //  depositTo() consumes 381,269 gas: 1 listener (existing setup)
+  //  depositTo() consumes 445,856 gas : 2 listeners (+64,587)
+  //  depositTo() consumes 505,877 gas : 3 listeners (+124,608)
+
+
+  // withdrawInstantlyFrom() from consumes 400,189 gas (existing)
+  // withdrawInstantlyFrom() gas used 495,958 : 2 listeners (+95,769)
+  // withdrawInstantlyFrom() gas used 572,289 : 3 listeners (+172,100)
+
+
+  // One Ticket measure Faucet + One Sponsorship measure Faucet
+  // depositTo() 390,553
+  // withdrawInstantlyFrom() 424,343
+
+  // second transactions (when faucets are intialized)
+   // depositTo() consumes 375,561
+   // withdrawInstantlyFrom() consumes 409,343
