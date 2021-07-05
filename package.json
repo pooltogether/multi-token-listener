@@ -1,6 +1,6 @@
 {
   "name": "@pooltogether/multi-token-listener",
-  "version": "1.0.0-beta.1",
+  "version": "1.0.0",
   "description": "PoolTogether MultiTokenListener",
   "main": "index.js",
   "license": "MIT",
@@ -15,7 +15,7 @@
     "format:file": "prettier --config .prettierrc --write",
     "hint": "solhint \"contracts/**/*.sol\"",
     "start-fork": "FORK_ENABLED=true hardhat node",
-    "run-fork" : "hardhat run ./scripts/createTokenFaucets.ts --network localhost",
+    "run-fork": "hardhat run ./scripts/createTokenFaucets.ts --network localhost",
     "test": "yarn clean && HIDE_DEPLOY_LOG=true OPTIMIZER_DISABLED=true hardhat test"
   },
   "dependencies": {
