@@ -23,7 +23,7 @@ if (alchemyUrl && process.env.FORK_ENABLED && mnemonic) {
     chainId: 1,
     forking: {
       url: alchemyUrl,
-      blockNumber: 12635100
+      blockNumber: 12789203
     },
     accounts: {
       mnemonic,
