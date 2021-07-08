@@ -1,14 +1,11 @@
 import { factoryDeploy } from "@pooltogether/pooltogether-proxy-factory-package"
 
 const hardhat = require('hardhat')
-const chalk = require("chalk")
-const { ethers, deployments, getChainId } = hardhat
+const { ethers } = hardhat
 
 const tokenFaucetProxyFactoryAddress = "0xE4E9cDB3E139D7E8a41172C20b6Ed17b6750f117" // deployed on real mainnet -dont change
-const multiTokenListenerImplemenationAddress = "0x037e907fFA9df4f8D13dA5B0BE5e9F317AD6e0Ef" // update to that in when deployment ran
 const pool = "0x0cec1a9154ff802e7934fc916ed7ca50bde6844e"
 const timelockAddress = "0x42cd8312d2bce04277dd5161832460e95b24262e"
-
 
 async function getProxy(tx:any) { 
   const gnosisSafe = await ethers.provider.getUncheckedSigner('0x029Aa20Dcc15c022b1b61D420aaCf7f179A9C73f')
@@ -17,8 +14,6 @@ async function getProxy(tx:any) {
   const createResultEvents = createResultReceipt.logs.map((log:any) => { try { return tokenFaucetProxyFactory.interface.parseLog(log) } catch (e) { return null } })
   return createResultEvents[0].args.proxy
 }
-
-
 
 async function run() {
   
@@ -80,11 +75,11 @@ async function run() {
       ]
   )
 
-  console.log("multiTokenListenerImplemenationAddress ", multiTokenListenerImplemenationAddress)
 
+  const multiTokenListenerImplementation = await ethers.getContract('MultiTokenListener')
   
   const multiTokenListenerResult = await factoryDeploy({
-    implementationAddress: multiTokenListenerImplemenationAddress,
+    implementationAddress: multiTokenListenerImplementation.address,
     contractName: "MultiTokenListenerInstance",
     initializeData: initializerArgs,
     provider: ethers.provider,
@@ -133,10 +128,12 @@ async function run() {
   
   const tokenFaucetArray = [daiTokenFaucet, daiTokenFaucet2]
   console.log(`adding ${tokenFaucetArray.length} faucets`)
-  const addAddressesResult = await multiTokenListener.addAddresses(tokenFaucetArray)
+  await multiTokenListener.addAddresses(tokenFaucetArray)
+
+  console.log(`Supports interface: ${await multiTokenListener.supportsInterface('0xff5e34e7')}`)
 
   // set token listeners on strategies
-  console.log("setting tokenlisteners")
+  console.log(`Setting prize strategy token listener to ${multiTokenListenerResult.address}`)
   await daiPrizeStrategy.setTokenListener(multiTokenListenerResult.address)
   console.log("tokenListeners set")
 

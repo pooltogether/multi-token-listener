@@ -17,6 +17,7 @@ cache
 node_modules
 types
 deployments/localhost
+deployments/homestead
 
 # Solidity Coverage
 coverage
