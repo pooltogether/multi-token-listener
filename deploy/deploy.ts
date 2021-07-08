@@ -1,8 +1,7 @@
 import chalk from 'chalk';
 
 import { HardhatRuntimeEnvironment } from 'hardhat/types';
-import { DeployFunction, DeployResult } from 'hardhat-deploy/types';
-import { factoryDeploy } from "@pooltogether/pooltogether-proxy-factory-package"
+import { DeployResult } from 'hardhat-deploy/types';
 
 const displayLogs = !process.env.HIDE_DEPLOY_LOG;
 
@@ -100,25 +99,11 @@ const deployFunction: any = async function (hre: HardhatRuntimeEnvironment) {
   });
   displayResult('MultiTokenListener Implementation', multiTokenListener);
   
-  const multiTokenListenerAbi = (await hre.artifacts.readArtifact("MultiTokenListener")).abi
-  const multiTokenListenerInterface = new ethers.utils.Interface(multiTokenListenerAbi)
-
-  const initializerArgs: string = multiTokenListenerInterface.encodeFunctionData(multiTokenListenerInterface.getFunction("initialize(address)"),
-      [
-        deployer  // _owner
-      ]
-  )
-
-  cyan(`now deploying using factoryDeploy`)
-  // now deploy with generic proxy factory package
-  const result = await factoryDeploy({
-    implementationAddress: multiTokenListener.address,
-    contractName: "MultiTokenListenerInstance",
-    initializeData: initializerArgs,
-    provider: ethers.provider,
-    signer: signer
-  })
-  console.log(result)
+  if (multiTokenListener.newlyDeployed) {
+    cyan(`\nFreezing implementation....`)
+    const contract = await ethers.getContractAt('MultiTokenListener', multiTokenListener.address)
+    await contract.freeze()
+  }
 
   green("Done!")
 };

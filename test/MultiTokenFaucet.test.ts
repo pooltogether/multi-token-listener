@@ -127,6 +127,24 @@ describe('MultiToken Listener', () => {
         })
     })
 
+    describe('freeze()', () => {
+        let multiTokenListener2: Contract
+
+        beforeEach(async () => {
+            const multiTokenListenerContractFactory: ContractFactory = await ethers.getContractFactory("MultiTokenListener", wallet)
+            multiTokenListener2 = await multiTokenListenerContractFactory.deploy()
+            await multiTokenListener2.freeze()
+        })
+
+        it('should set owner to zero', async () => {
+            expect(await multiTokenListener2.owner()).to.equal(ethers.constants.AddressZero)
+        })
+
+        it('cannot be called twice', async () => {
+            await expect(multiTokenListener2.freeze()).to.be.revertedWith('contract is already initialized')
+        })
+    })
+
     describe('beforeTokenTransfer()', () => {
         it('should do nothing if minting', async () => {
             await multiTokenListener.addAddresses([tokenFaucet1.address, tokenFaucet2.address])
