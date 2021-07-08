@@ -17,6 +17,12 @@ contract MultiTokenListener is TokenListener, AddressRegistry {
         initializeAddressRegistry("TokenFaucets", _owner);
     }
 
+    /// @notice Freezes the contract, so that there is no owner.
+    /// @dev Useful for proxy implementations
+    function freeze() public initializer {
+        // no-op
+    }
+
     /// @notice Pass through the beforeTokenMint hook to all the registry TokenFaucets
     /// @param to The address being minted to
     /// @param amount The amount of controlledToken being minted
@@ -25,8 +31,9 @@ contract MultiTokenListener is TokenListener, AddressRegistry {
     function beforeTokenMint(address to, uint256 amount, address controlledToken, address referrer) external override {
 
         address faucet = addressList.start();
+        address end = addressList.end();
 
-        while(faucet != addressList.end()){
+        while(faucet != end){
             TokenFaucet(faucet).beforeTokenMint(to, amount, controlledToken, referrer);
             faucet = addressList.next(faucet);
         }
@@ -40,8 +47,9 @@ contract MultiTokenListener is TokenListener, AddressRegistry {
     function beforeTokenTransfer(address from, address to, uint256 amount, address controlledToken) external override {
 
         address faucet = addressList.start();
+        address end = addressList.end();
 
-        while(faucet != addressList.end()){
+        while(faucet != end){
             TokenFaucet(faucet).beforeTokenTransfer(from, to, amount, controlledToken);
             faucet = addressList.next(faucet);
         }
